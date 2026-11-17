@@ -44,7 +44,7 @@ Moonfill is a browser extension for Awin agents. Before, you had to fill in the 
 | Posting to Salesforce… | The result is ready and is being posted |
 | Result ready · waiting for the browser to be in front | The browser window was hidden. The result will be posted as soon as you bring the browser to the front |
 | Complete · pasted in Salesforce | Done. The card disappears after one minute and stays in **History** |
-| Failed: … | Something went wrong. See "If something goes wrong" below |
+| Failed:  | Something went wrong. See "If something goes wrong" below |
 
 The **History** button lists your latest scans with program, MID and status.
 
