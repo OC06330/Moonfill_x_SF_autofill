@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moonfill x SF_autofill</title>
+<meta name="description" content="One-click Moonpull scans and Technical Checklist fill and save on Salesforce. Install guide.">
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f7f7f5; --surface: #ffffff; --ink: #141414; --ink-2: #55534f; --line: #e3e1da;
+    --accent: #2a5bd7; --accent-ink: #ffffff; --soft: #eef2fc; --code: #f1f0ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #111110; --surface: #1b1b1a; --ink: #f0efec; --ink-2: #b9b7ae; --line: #2e2e2b;
+      --accent: #6f95f2; --accent-ink: #0d0d0d; --soft: #1d2539; --code: #262624;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #111110; --surface: #1b1b1a; --ink: #f0efec; --ink-2: #b9b7ae; --line: #2e2e2b;
+    --accent: #6f95f2; --accent-ink: #0d0d0d; --soft: #1d2539; --code: #262624;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 48px 16px 64px; }
+  a { color: var(--accent); }
+  h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 16px 0 8px; letter-spacing: -0.01em; }
+  h2 { font-size: 22px; margin: 48px 0 12px; }
+  h3 { font-size: 17px; margin: 0 0 6px; }
+  p { margin: 0 0 12px; }
+  .lead { font-size: 18px; color: var(--ink-2); max-width: 640px; }
+  .logo { width: 56px; height: 56px; border-radius: 12px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 24px 0 8px; }
+  .button { display: inline-block; padding: 12px 20px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: none; }
+  .button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .small { font-size: 14px; color: var(--ink-2); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .card ul { margin: 8px 0 0; padding-left: 20px; }
+  .card li { margin: 4px 0; }
+  ol.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  ol.steps li { counter-increment: step; position: relative; padding: 12px 16px 12px 52px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  ol.steps li::before { content: counter(step); position: absolute; left: 14px; top: 12px; width: 26px; height: 26px; border-radius: 50%; background: var(--soft); color: var(--accent); font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+  code { font: 14px ui-monospace, Menlo, Consolas, monospace; background: var(--code); padding: 2px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+  .tabs button { font: inherit; font-weight: 600; padding: 8px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 8px; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--soft); color: var(--accent); border-color: var(--accent); }
+  .note { background: var(--soft); border-radius: 10px; padding: 14px 16px; }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="icon.png" alt="">
+  <h1>Moonfill x SF_autofill</h1>
+  <p class="lead">Two one-click jobs on Salesforce: run a Moonpull integration scan with the result posted to the record's Chatter, and fill in and save the record's Technical Checklist.</p>
+  <div class="actions">
+    <a class="button" href="https://github.com/OC06330/Moonfill_x_SF_autofill/releases/latest/download/Moonfill_x_SF_autofill.zip">Download for Edge &amp; Chrome</a>
+    <a class="button ghost" href="https://github.com/OC06330/Moonfill_x_SF_autofill/releases/latest">Release notes</a>
+  </div>
+  <p class="small">Version 3.0 · Microsoft Edge or Google Chrome on your work computer</p>
+
+  <h2>What it does</h2>
+  <div class="cards">
+    <section class="card">
+      <h3>🌙 Moonpull scan</h3>
+      <p>The <strong>Submit Moonpull form</strong> button on the record submits the scan for you and waits for the result. It then posts the result to Chatter and fills in the scan fields.</p>
+      <ul>
+        <li>No typing the MID or region</li>
+        <li>Run several scans at once</li>
+        <li>Progress in the toolbar popup</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h3>✅ Technical Checklist</h3>
+      <p>The <strong>Checklist Autofill</strong> panel, bottom right of the record, fills in the team's agreed answers and saves the record.</p>
+      <ul>
+        <li>Pixel Sent and Successful Tracking Test dates set for you</li>
+        <li>Platform templates, picked automatically from the client's site</li>
+        <li><strong>Fill only</strong> to check first, <strong>Clear checklist</strong> to empty it</li>
+        <li>Your own values in Settings</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h3>🔎 IR and 🚀 New Implementation</h3>
+      <p>Buttons on the record open the Internal Review or New Implementation pages for the advertiser in Awin, as one tab group.</p>
+    </section>
+  </div>
+
+  <h2>Before you start</h2>
+  <div class="cards">
+    <div class="card"><h3>Browser</h3><p>Microsoft Edge or Google Chrome, signed in to <strong>Salesforce</strong> and <strong>Microsoft 365</strong> in the same browser.</p></div>
+    <div class="card"><h3>Scan results folder</h3><p>Scans need access to the shared Moonpull batch results folder. Ask Rodier or Thomas on Teams. The checklist needs no extra access.</p></div>
+    <div class="card"><h3>Replacing an old version?</h3><p>Let any running scans finish, then remove the old Moonfill and the separate SalesforceAutofill extension first.</p></div>
+  </div>
+
+  <h2>Install</h2>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" id="tab-edge" aria-selected="true" aria-controls="edge">Edge</button>
+    <button type="button" role="tab" id="tab-chrome" aria-selected="false" aria-controls="chrome">Chrome</button>
+  </div>
+  <ol class="steps" id="edge" role="tabpanel" aria-labelledby="tab-edge">
+    <li><a href="https://github.com/OC06330/Moonfill_x_SF_autofill/releases/latest/download/Moonfill_x_SF_autofill.zip">Download the zip</a> and unzip it somewhere permanent, for example in Documents. Keep the <strong>Moonfill</strong> folder: the extension runs from it.</li>
+    <li>Open <code>edge://extensions</code> in the address bar.</li>
+    <li>Turn on <strong>Developer mode</strong> (bottom left).</li>
+    <li>Click <strong>Load unpacked</strong> and choose the <strong>Moonfill</strong> folder, the one containing <code>manifest.json</code>.</li>
+    <li>Click the puzzle icon in the toolbar and pin 🌙 Moonfill.</li>
+  </ol>
+  <ol class="steps" id="chrome" role="tabpanel" aria-labelledby="tab-chrome" hidden>
+    <li><a href="https://github.com/OC06330/Moonfill_x_SF_autofill/releases/latest/download/Moonfill_x_SF_autofill.zip">Download the zip</a> and unzip it somewhere permanent. Keep the <strong>Moonfill</strong> folder: the extension runs from it.</li>
+    <li>Open <code>chrome://extensions</code> in the address bar.</li>
+    <li>Turn on <strong>Developer mode</strong> (top right).</li>
+    <li>Click <strong>Load unpacked</strong> and choose the <strong>Moonfill</strong> folder.</li>
+    <li>Pin 🌙 Moonfill from the puzzle icon.</li>
+  </ol>
+  <p class="small" style="margin-top:12px">Optional: to have checklist templates picked automatically, open Moonfill's <strong>Settings</strong> (link on the checklist panel) and click <strong>Allow platform detection</strong>.</p>
+
+  <h2>Update</h2>
+  <ol class="steps">
+    <li>Download the new zip from the <a href="https://github.com/OC06330/Moonfill_x_SF_autofill/releases/latest">latest release</a>.</li>
+    <li>Replace the files in your Moonfill folder with the new ones.</li>
+    <li>On the extensions page, click the <strong>reload</strong> icon on the Moonfill card.</li>
+  </ol>
+
+  <h2>Good habits</h2>
+  <div class="cards">
+    <div class="card"><h3>Scans</h3><ul><li>Always start from the program's record.</li><li>Let the form finish filling itself in (about 25 seconds).</li><li>Keep the browser open until the scan says Complete.</li></ul></div>
+    <div class="card"><h3>Checklist</h3><ul><li>Open the record's Details tab first.</li><li>Not sure? Use <strong>Fill only</strong>, check, then Save.</li><li>If it stops, the panel says why. Nothing is saved.</li></ul></div>
+  </div>
+
+  <h2>Privacy</h2>
+  <p class="note">Moonfill works on the page in front of you, using your own Salesforce and Microsoft 365 logins. It counts each use (checklist fills, Moonpull scans, New Implementation and IR) by the record's Assigned TC, to measure adoption. No client information is recorded.</p>
+
+  <footer>
+    Scans built by Rodier for Awin agents; the Technical Checklist comes from SalesforceAutofill.
+    Questions or problems: <a href="https://github.com/OC06330/Moonfill_x_SF_autofill/issues">GitHub Issues</a>, or contact the project owner.
+    · <a href="https://github.com/OC06330/Moonfill_x_SF_autofill">Source</a>
+  </footer>
+</main>
+<script>
+  for (const tab of document.querySelectorAll('[role="tab"]')) {
+    tab.addEventListener('click', () => {
+      for (const t of document.querySelectorAll('[role="tab"]')) {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      }
+    });
+  }
+  if (/Chrome\//.test(navigator.userAgent) && !/Edg\//.test(navigator.userAgent)) document.getElementById('tab-chrome').click();
+</script>
+</body>
+</html>

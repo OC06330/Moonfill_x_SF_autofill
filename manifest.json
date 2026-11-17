@@ -1,0 +1,90 @@
+{
+  "manifest_version": 3,
+  "name": "Moonfill",
+  "version": "3.0",
+  "description": "Run Moonpull scans from Salesforce in one click, and fill in and save the Technical Checklist in one click.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "activeTab",
+    "scripting",
+    "webRequest",
+    "alarms",
+    "notifications",
+    "tabGroups"
+  ],
+  "host_permissions": [
+    "https://forms.office.com/*",
+    "https://forms.cloud.microsoft/*",
+    "https://awin.lightning.force.com/*",
+    "https://zanox.sharepoint.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://forms.office.com/*",
+        "https://forms.cloud.microsoft/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://awin.lightning.force.com/*"
+      ],
+      "js": [
+        "salesforce.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://awin.lightning.force.com/*",
+        "file:///*/autofill/dev/mock/*.html*"
+      ],
+      "js": [
+        "autofill/fields.js",
+        "autofill/config.js",
+        "autofill/settings.js",
+        "autofill/templates.js",
+        "autofill/engine.js",
+        "autofill/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "autofill/options.html",
+    "open_in_tab": true
+  },
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "autofill/options.html"
+      ],
+      "matches": [
+        "https://awin.lightning.force.com/*"
+      ]
+    }
+  ]
+}

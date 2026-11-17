@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock Lightning Implementation record (fictional)</title>
+<style>
+  body { margin: 0; background: #f3f3f3; font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #181818; }
+  .banner { background: #fff4c2; padding: 8px 16px; border-bottom: 1px solid #e0c96b; }
+  .record { max-width: 900px; margin: 16px auto 96px; }
+  h1 { font-size: 18px; }
+  .slds-section { background: #fff; border-radius: 6px; margin-bottom: 16px; padding: 8px 16px; }
+  .slds-section__title button { border: 0; background: none; font: inherit; font-size: 15px; font-weight: 600; padding: 4px 0; }
+  .slds-section__content { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+  .slds-form-element { border-bottom: 1px solid #eee; padding: 6px 0; }
+  .slds-form-element__label { display: block; color: #555; font-size: 12px; }
+  .slds-form-element__control { display: flex; justify-content: space-between; min-height: 20px; }
+  .test-id__inline-edit-trigger { border: 0; background: none; cursor: pointer; color: #0176d3; }
+  .slds-assistive-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .slds-docked-form-footer { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #ccc; padding: 10px; display: flex; justify-content: center; gap: 8px; }
+  .slds-popover_error { color: #ba0517; font-weight: 600; }
+  .slds-theme_success { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #2e844a; color: #fff; padding: 10px 18px; border-radius: 4px; }
+  input.slds-input, textarea { width: 100%; box-sizing: border-box; font: inherit; }
+</style>
+</head>
+<body>
+<div class="banner">
+  <strong>Fictional mock</strong> of a Lightning record page for testing the extension. Not Salesforce; nothing is sent anywhere.
+  <label>Scenario
+    <select id="scenario">
+      <option value="success">Successful save</option>
+      <option value="error">Save validation error</option>
+      <option value="missing-option">Missing dropdown option</option>
+      <option value="dependent">Dependent field changes</option>
+      <option value="collapsed">Checklist section collapsed</option>
+      <option value="no-history">No "Created." line in history</option>
+      <option value="dates-filled">Date fields already filled</option>
+      <option value="no-landing">No Landing Page URL</option>
+      <option value="no-tc">Assigned TC empty</option>
+    </select>
+  </label>
+</div>
+<div class="oneContent" id="cached" hidden></div>
+<div class="oneContent active" id="app"></div>
+<div id="toasts"></div>
+<script src="../../fields.js"></script>
+<script>
+(function () {
+  const scenarioSelect = document.getElementById('scenario');
+  const fromQuery = new URLSearchParams(location.search).get('scenario');
+  if (fromQuery) scenarioSelect.value = fromQuery;
+  scenarioSelect.addEventListener('change', () => { location.search = '?scenario=' + scenarioSelect.value; });
+  const scenario = scenarioSelect.value;
+
+  const TEXT = ['Deduplication Parameter', 'Channel parameters implemented', 'Website Platform URL', 'Other eCommerce platform', 'Other Deduplication Solution', 'Other App tracking implemented', 'Product Feed format'];
+  const AREA = ['Tech notes', 'Custom parameters notes'];
+  const DATE = ['Pixel Sent', 'Successful Tracking Test'];
+  const field = f => {
+    const kind = DATE.includes(f.label) ? 'date' : AREA.includes(f.label) ? 'textarea' : TEXT.includes(f.label) ? 'text' : 'picklist';
+    const options = ['--None--', 'Yes', 'No', 'Unknown', 'Other'];
+    if (f.value && !options.includes(f.value)) options.push(f.value);
+    for (const t of globalThis.TCA_TEMPLATES || []) { const v = t.values[f.label]; if (v && !options.includes(v)) options.push(v); }
+    return { label: f.label, kind, options, required: f.label === 'Img tag implemented' };
+  };
+  const technical = globalThis.TCA_FIELDS.map(field);
+  if (scenario === 'missing-option') technical.find(f => f.label === 'Server to server').options = ['--None--', 'No', 'Exempt'];
+  const commercial = [field({ label: 'Img tag implemented' }), field({ label: 'Tech notes' })];
+  const sections = [{ key: 'TC', title: 'Technical Checklist', fields: technical }, { key: 'CC', title: 'Commercial Checklist', fields: commercial }];
+
+  let record = {
+    'TC::Server to server': 'No',
+    'TC::Deduplication Solution': 'Other',
+    'TC::Tech notes': 'Existing note from the implementer',
+    'CC::Img tag implemented': 'No'
+  };
+  if (scenario === 'dates-filled') Object.assign(record, { 'TC::Pixel Sent': '2026-10-01', 'TC::Successful Tracking Test': '2026-10-20' });
+  let draft = null;
+  let collapsed = scenario === 'collapsed';
+  window.mockRecord = record;
+  window.mockSaveCount = 0;
+
+  function h(tag, props = {}, ...kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') e.className = v;
+      else if (k === 'text') e.textContent = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v);
+    }
+    e.append(...kids.filter(k => k !== null && k !== undefined));
+    return e;
+  }
+
+  function shadowHost(tag, ...kids) {
+    const host = document.createElement(tag);
+    host.attachShadow({ mode: 'open' }).append(...kids);
+    return host;
+  }
+
+  function setDraft(key, value) {
+    draft[key] = value;
+    if (scenario === 'dependent' && key === 'TC::Deduplication') draft['TC::Deduplication Solution'] = '';
+    render();
+  }
+
+  function combobox(key, f) {
+    const value = draft[key] || '';
+    const dropdown = h('div', { role: 'listbox', class: 'slds-dropdown' });
+    dropdown.hidden = true;
+    const button = h('button', { type: 'button', role: 'combobox', class: 'slds-combobox__input', 'data-value': value, 'aria-expanded': 'false' },
+      h('span', { class: 'slds-truncate', text: value || '--None--' }));
+    button.addEventListener('click', () => {
+      if (!dropdown.hidden) { dropdown.hidden = true; return; }
+      dropdown.replaceChildren(...f.options.map(o => h('lightning-base-combobox-item', { role: 'option', 'data-value': o === '--None--' ? '' : o, onclick: () => setDraft(key, o === '--None--' ? '' : o) },
+        h('span', { class: 'slds-media__body' }, h('span', { class: 'slds-truncate', title: o, text: o })))));
+      dropdown.hidden = false;
+    });
+    button.addEventListener('keydown', e => { if (e.key === 'Escape') dropdown.hidden = true; });
+    return shadowHost('lightning-base-combobox', h('div', { class: 'slds-combobox' }, button, dropdown));
+  }
+
+  // Dates are stored as YYYY-MM-DD, shown as DD/MM/YYYY on the record and as "3 Nov 2026" in the
+  // date picker, which (like Lightning's) reformats what was typed once it changes.
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const shortDate = iso => iso ? iso.split('-').reverse().join('/') : '';
+  const mediumDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${Number(d)} ${MON[m - 1]} ${y}`; };
+  const typedDate = text => { const m = String(text).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : ''; };
+
+  function datepicker(key) {
+    const input = h('input', { type: 'text', class: 'slds-input' });
+    input.value = mediumDate(draft[key]);
+    input.addEventListener('change', () => { draft[key] = typedDate(input.value); input.value = mediumDate(draft[key]); });
+    return shadowHost('lightning-datepicker', h('div', { class: 'slds-input-has-icon' }, input, h('button', { type: 'button', class: 'slds-button slds-button_icon', title: 'Select a date' }, '📅')));
+  }
+
+  // The record's history box. It sits on a tab that isn't showing, as on the Related tab.
+  function historyCard(createdOn, includeCreated) {
+    const rows = [['10/11/2026, 15:20', 'Tech notes', 'Fictional User']];
+    if (includeCreated) rows.push([createdOn + ', 09:41', 'Created.', 'Fictional User']);
+    return h('div', { role: 'tabpanel', class: 'slds-tabs_default__content', hidden: '' },
+      h('article', { class: 'slds-card' },
+        h('div', { class: 'slds-card__header' }, h('h2', {}, h('a', {}, h('span', { class: 'slds-card__header-title', text: `Implementation History (${rows.length})` })))),
+        h('table', {}, h('tbody', {}, ...rows.map(r => h('tr', {}, ...r.map(c => h('td', {}, shadowHost('lightning-formatted-text', document.createTextNode(c))))))))));
+  }
+
+  function editItem(key, f) {
+    const label = h('label', { class: 'slds-form-element__label' }, f.required ? h('abbr', { class: 'slds-required', title: 'required', text: '*' }) : null, f.label);
+    let control, wrapper;
+    if (f.kind === 'picklist') { control = combobox(key, f); wrapper = 'lightning-combobox'; }
+    else if (f.kind === 'date') { control = datepicker(key); wrapper = 'lightning-input'; }
+    else {
+      control = h(f.kind === 'textarea' ? 'textarea' : 'input', f.kind === 'textarea' ? {} : { type: 'text', class: 'slds-input' });
+      control.value = draft[key] || '';
+      control.addEventListener('change', () => { draft[key] = control.value; });
+      wrapper = f.kind === 'textarea' ? 'lightning-textarea' : 'lightning-input';
+    }
+    return h('records-record-layout-item', {}, h(wrapper, {}, h('div', { class: 'slds-form-element' }, label, h('div', { class: 'slds-form-element__control' }, control))));
+  }
+
+  function viewItem(key, f, values, editable) {
+    const text = shadowHost('lightning-formatted-text', document.createTextNode(f.kind === 'date' ? shortDate(values[key]) : values[key] || ''));
+    return h('records-record-layout-item', { 'field-label': f.label },
+      h('div', { class: 'slds-form-element slds-form-element_readonly' },
+        h('div', { class: 'slds-form-element__label' }, h('span', { class: 'test-id__field-label', text: f.label })),
+        h('div', { class: 'slds-form-element__control' },
+          h('span', { class: 'test-id__field-value' }, text),
+          h('button', { type: 'button', class: 'test-id__inline-edit-trigger', title: 'Edit ' + f.label, onclick: editable ? enterEdit : () => {} },
+            '✎', h('span', { class: 'slds-assistive-text', text: 'Edit ' + f.label })))));
+  }
+
+  function sectionEl(s, values, editing, editable) {
+    return h('records-record-layout-section', {},
+      h('div', { class: 'slds-section slds-is-open' },
+        h('h3', { class: 'slds-section__title' }, h('button', { type: 'button', class: 'slds-section__title-action', 'aria-expanded': String(!(editable && s.key === 'TC' && collapsed)), onclick: () => { if (editable && s.key === 'TC') { collapsed = !collapsed; render(); } } }, h('span', { class: 'test-id__section-header-title', text: s.title }))),
+        editable && s.key === 'TC' && collapsed ? null : h('div', { class: 'slds-section__content' }, ...s.fields.map(f => {
+          const key = s.key + '::' + f.label;
+          return editing ? editItem(key, f) : viewItem(key, f, values, editable);
+        }))));
+  }
+
+  function render() {
+    const app = document.getElementById('app');
+    app.replaceChildren(h('div', { class: 'record' },
+      h('h1', { text: 'IMP-0001 · Fictional Retailer Ltd (mock)' }),
+      scenario === 'no-landing' ? null : h('records-record-layout-item', { 'field-label': 'Landing Page URL' },
+        h('div', { class: 'slds-form-element slds-form-element_readonly' },
+          h('div', { class: 'slds-form-element__label' }, h('span', { class: 'test-id__field-label', text: 'Landing Page URL' })),
+          h('div', { class: 'slds-form-element__control' }, h('span', { class: 'test-id__field-value' },
+            shadowHost('lightning-formatted-url', h('a', { href: 'https://shop.example.com/', text: 'shop.example.com' })))))),
+      h('records-record-layout-item', { 'field-label': 'Assigned TC' },
+        h('div', { class: 'slds-form-element slds-form-element_readonly' },
+          h('div', { class: 'slds-form-element__label' }, h('span', { class: 'test-id__field-label', text: 'Assigned TC' })),
+          h('div', { class: 'slds-form-element__control' }, h('span', { class: 'test-id__field-value' },
+            scenario === 'no-tc' ? null : h('a', { href: '/lightning/r/User/005MOCK/view', text: 'Alex Mock-Person' }))))),
+      ...sections.map(s => sectionEl(s, draft || record, !!draft, true)),
+      historyCard('03/11/2026', scenario !== 'no-history'),
+      draft ? h('records-form-footer', { class: 'slds-docked-form-footer' },
+        h('button', { type: 'button', name: 'CancelEdit', text: 'Cancel', onclick: cancel }),
+        h('button', { type: 'button', name: 'SaveEdit', text: 'Save', onclick: save })) : null));
+  }
+
+  function enterEdit() { draft = { ...record }; document.getElementById('toasts').replaceChildren(); render(); }
+  function cancel() { draft = null; render(); }
+  function save() {
+    setTimeout(() => {
+      const footer = document.querySelector('records-form-footer');
+      if (scenario === 'error') {
+        footer.querySelector('records-record-edit-error')?.remove();
+        footer.prepend(h('records-record-edit-error', {}, h('div', { class: 'slds-popover_error', text: 'We hit a snag. Review the errors on this page.' })));
+        return;
+      }
+      record = { ...draft };
+      window.mockRecord = record;
+      window.mockSaveCount++;
+      draft = null;
+      render();
+      document.getElementById('toasts').replaceChildren(h('div', { class: 'slds-theme_success', role: 'status', text: 'Implementation "IMP-0001" was saved.' }));
+    }, 300);
+  }
+
+  // A previously viewed record that Lightning keeps hidden in the page.
+  document.getElementById('cached').append(h('div', { class: 'record' }, h('h1', { text: 'IMP-0000 (cached, hidden)' }), sectionEl(sections[0], {}, false, false), historyCard('01/01/2025', true)));
+  render();
+})();
+</script>
+</body>
+</html>

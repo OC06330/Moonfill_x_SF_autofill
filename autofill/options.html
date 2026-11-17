@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklist Autofill settings</title>
+<style>
+  :root { --blue: #0176d3; --text: #181818; --muted: #5c5c5c; --line: #e5e5e5; --bg: #f3f3f3; --card: #fff; --changed: #eef4ff; --error: #ba0517; --ok: #2e844a; }
+  @media (prefers-color-scheme: dark) {
+    :root { --blue: #4ea5ff; --text: #ececec; --muted: #a8a8a8; --line: #3a3a3a; --bg: #1b1b1b; --card: #262626; --changed: #1f2c40; --error: #ff8a80; --ok: #6fcf8f; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 96px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 0 0 8px; }
+  p { margin: 0 0 8px; }
+  .muted { color: var(--muted); }
+  .small-print { font-size: 12px; margin-top: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-top: 16px; }
+  label.inline { display: inline-flex; gap: 8px; align-items: center; }
+  select, input[type=text] { font: inherit; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--text); }
+  input[type=text] { width: 100%; box-sizing: border-box; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  td.label { font-weight: 600; width: 30%; }
+  td.default { color: var(--muted); width: 25%; }
+  tr.changed { background: var(--changed); }
+  .value[hidden] { display: none; }
+  .value { margin-top: 6px; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 12px 16px; display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 4px; border: 1px solid var(--blue); background: var(--card); color: var(--blue); cursor: pointer; }
+  button.primary { background: var(--blue); color: #fff; }
+  .status[data-state="ok"] { color: var(--ok); }
+  .status[data-state="error"] { color: var(--error); font-weight: 600; }
+  @media (max-width: 640px) {
+    thead { display: none; }
+    tr, td { display: block; width: auto !important; }
+    tr { border-bottom: 1px solid var(--line); padding: 8px 0; }
+    td { border: 0; padding: 2px 0; }
+    td.default::before { content: "Team default: "; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Checklist Autofill settings</h1>
+  <p class="muted">Choose what each Technical Checklist field is filled with. Anything left on <strong>Team default</strong> follows the agreed team rules. These settings are yours alone. They follow your Edge profile and change nothing in Salesforce until you next click Fill.</p>
+
+  <section class="card">
+    <h2>Platform detection</h2>
+    <p class="muted">When the panel's template is set to <strong>Auto-detect platform</strong>, Fill reads the client's site from the record's <strong>Landing Page URL</strong> to work out its eCommerce platform, then applies that platform's template. Reading other websites needs your permission, asked for once here. Without it, the default fill is used.</p>
+    <p><span id="detect-status" class="muted">Checking…</span> <button id="detect-toggle" type="button" hidden></button></p>
+  </section>
+
+  <section class="card">
+    <h2>Date format</h2>
+    <p class="muted">How dates are typed into Salesforce. Use the order Salesforce shows dates in for you.</p>
+    <label class="inline">Format <select id="date-format"></select></label>
+  </section>
+
+  <section class="card">
+    <h2>Fields</h2>
+    <p class="muted">For a dropdown, a value must match one of its options exactly as Salesforce shows it. If it doesn't, the run stops before saving and lists the options.</p>
+    <table>
+      <thead><tr><th>Field</th><th>Team default</th><th>Your choice</th></tr></thead>
+      <tbody id="fields"></tbody>
+    </table>
+  </section>
+
+  <p class="muted small-print">Moonfill counts each use (checklist fills, Moonpull scans, New Implementation and IR) by the record's Assigned TC, to measure adoption. No client information is recorded.</p>
+</main>
+<div class="bar">
+  <button class="primary" id="save" type="button">Save settings</button>
+  <button id="reset" type="button">Reset all to team defaults</button>
+  <span class="status" id="status" role="status" aria-live="polite"></span>
+</div>
+<script src="fields.js"></script>
+<script src="config.js"></script>
+<script src="settings.js"></script>
+<script src="options.js"></script>
+</body>
+</html>
