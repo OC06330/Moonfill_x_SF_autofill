@@ -352,13 +352,26 @@ const SP_SITE = "https://zanox.sharepoint.com/teams/Global-MoonpullI-Integration
 const SP_FOLDER_PATH =
   "/teams/Global-MoonpullI-Integration/Shared Documents/General/batch results use cases/Integartion Tests/Moonpull Integration dataCenter/";
 
+// A web page instead of the result file: SharePoint's session ran out and Microsoft's sign-in page came
+// back. It can arrive as a normal 200 after a redirect to login.microsoftonline.com, and it may start with
+// a comment before <!DOCTYPE html>, so a "starts with <html" test isn't enough (that pasted a sign-in page
+// into Chatter on 2026-11-18). Result files are plain text.
+function isSignInPage(res, text) {
+  const type = (res.headers && res.headers.get && res.headers.get("content-type")) || "";
+  let host = "";
+  try { host = new URL(res.url).hostname; } catch (e) { /* no final URL */ }
+  return /text\/html/i.test(type) ||
+    (!!host && host !== new URL(SP_SITE).hostname) ||
+    /<(!doctype\s+html|html[\s>]|head[\s>]|body[\s>]|meta\s)/i.test(text.slice(0, 5000));
+}
+
 async function tryFetch(url) {
   try {
     const res = await fetch(url, { credentials: "include", cache: "no-store", headers: { Accept: "text/plain,*/*" } });
     if (res.status === 404) return { status: "notfound" };
     if (!res.ok) return { status: "error", code: res.status, detail: `HTTP ${res.status}` };
     const text = await res.text();
-    if (/^\s*<(!doctype|html)/i.test(text)) return { status: "auth", detail: "got a login/HTML page instead of the file" };
+    if (isSignInPage(res, text)) return { status: "auth", detail: "SharePoint sent its sign-in page instead of the file: sign in to SharePoint again" };
     return { status: "ok", text: text.replace(/^\uFEFF/, "") };
   } catch (e) {
     // a redirect to login.microsoftonline.com ends up here as "Failed to fetch"

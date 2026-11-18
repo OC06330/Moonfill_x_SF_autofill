@@ -213,6 +213,9 @@ Scans built by Rodier for Awin agents. The Technical Checklist comes from Salesf
 
 ## What's new
 
+**v3.0.1 (November 2026)**
+- **Fix:** if your SharePoint session had run out, a scan could post Microsoft's sign-in page to the record's Chatter instead of the result. Moonfill now recognises the sign-in page, keeps waiting for the real result, and asks you to sign in to SharePoint again if it keeps happening. If you got such a post, delete it from the record's Chatter.
+
 **v3.0: Moonfill x SF_autofill (November 2026)**
 The first combined release: Moonpull scans and the Technical Checklist in one extension.
 - One-click fill and save of the Technical Checklist (30 fields), with **Check page** and **Fill only**.

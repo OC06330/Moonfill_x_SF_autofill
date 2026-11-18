@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Moonfill",
-  "version": "3.0",
+  "version": "3.0.1",
   "description": "Run Moonpull scans from Salesforce in one click, and fill in and save the Technical Checklist in one click.",
   "permissions": [
     "tabs",
